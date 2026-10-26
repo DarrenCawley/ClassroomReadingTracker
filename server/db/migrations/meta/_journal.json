@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1792688235244,
+      "tag": "0000_init_authors_and_books_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792692241299,
+      "tag": "0001_init_students_add_total_pages_to_books",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792697311602,
+      "tag": "20261022192831_add_reading_assignments",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792707704226,
+      "tag": "20261022222144_update_id_pks_to_uuid",
+      "breakpoints": true
+    }
+  ]
+}
