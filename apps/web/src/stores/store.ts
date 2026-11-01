@@ -14,7 +14,7 @@ export const store = {
   books: computed(() => data.books),
   assignments: computed(() => data.assignments),
   addStudent(name: string) {
-    data.students.push({ id: id(), name: name.trim(), createdAt: now() })
+    data.students.push({ id: id(), name: name.trim(), year: Number(), createdAt: now() })
     persist()
   },
   updateStudent(student: Student, name: string) {
