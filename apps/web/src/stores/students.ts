@@ -30,7 +30,7 @@ export const useStudentsStore = defineStore('students', () => {
 
   async function updateStudent(id: string, input: Pick<Student, 'name' | 'year'>) {
     const student = await api.patch<Student>(`/students/${id}`, input)
-    const index = students.value.findIndex(item => item.id === id)
+    const index = students.value.findIndex((item) => item.id === id)
     if (index !== -1) students.value.splice(index, 1, student)
     students.value.sort((a, b) => a.name.localeCompare(b.name))
     return student
