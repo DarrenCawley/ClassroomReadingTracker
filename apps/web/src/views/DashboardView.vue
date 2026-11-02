@@ -7,6 +7,10 @@
     </div>
     <RouterLink class="button" to="/students">Manage students</RouterLink>
   </section>
+  <div v-if="error" role="alert" class="panel">
+    <p>{{ error }}</p>
+    <button class="button" @click="studentsStore.loadStudents()">Retry loading students</button>
+  </div>
   <section class="stats">
     <article role="link" tabindex="0" style="cursor: pointer" @click="router.push({ name: 'students' })"
       @keydown.enter="router.push({ name: 'students' })"><small>Students</small><strong>{{ loading ? '...' :
