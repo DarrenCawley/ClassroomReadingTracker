@@ -1,7 +1,8 @@
 import { computed, reactive } from 'vue'
+import { useBooksStore } from './books'
 import { localRepository } from '../repository'
-import type { Book, ReadingAssignment, Status, Student, TrackerData } from '../types'
-const data = reactive<TrackerData>(localRepository.load())
+import type { Book, ReadingAssignment, Status, Student } from '../types'
+const data = reactive(localRepository.load())
 const id = () => crypto.randomUUID?.() ?? Math.random().toString(36).slice(2)
 const now = () => new Date().toISOString()
 const persist = () => localRepository.save(data)
@@ -11,7 +12,6 @@ export const percent = (assignment: ReadingAssignment, book?: Book) =>
     : undefined
 export const store = {
   students: computed(() => data.students),
-  books: computed(() => data.books),
   assignments: computed(() => data.assignments),
   addStudent(name: string) {
     data.students.push({ id: id(), name: name.trim(), year: Number(), createdAt: now() })
@@ -29,25 +29,6 @@ export const store = {
     data.assignments = data.assignments.filter((a) => a.studentId !== studentId)
     persist()
   },
-  addBook(input: Pick<Book, 'title' | 'author' | 'totalPages'>) {
-    data.books.push({ ...input, id: id(), createdAt: now() })
-    persist()
-  },
-  updateBook(book: Book, input: Pick<Book, 'title' | 'author' | 'totalPages'>) {
-    Object.assign(book, input)
-    data.assignments
-      .filter((a) => a.bookId === book.id)
-      .forEach((a) => this.updateAssignment(a, a.currentPage, a.status))
-    persist()
-  },
-  removeBook(bookId: string) {
-    data.books.splice(
-      data.books.findIndex((b) => b.id === bookId),
-      1,
-    )
-    data.assignments = data.assignments.filter((a) => a.bookId !== bookId)
-    persist()
-  },
   assign(studentId: string, bookId: string) {
     if (!data.assignments.some((a) => a.studentId === studentId && a.bookId === bookId)) {
       data.assignments.push({
@@ -62,7 +43,7 @@ export const store = {
     }
   },
   updateAssignment(a: ReadingAssignment, page: number, status: Status) {
-    const book = data.books.find((b) => b.id === a.bookId)
+    const book = useBooksStore().books.find((b) => b.id === a.bookId)
     a.currentPage = Math.max(0, book?.totalPages ? Math.min(page, book.totalPages) : page)
     a.status = status
     a.updatedAt = now()

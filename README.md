@@ -23,6 +23,19 @@ them with `npm run db:migrate`. The API workspace owns the Drizzle configuration
 The web build outputs `apps/web/dist`; the API build currently checks types only
 and its start command runs TypeScript through `tsx`.
 
+## Books
+
+The Books page (`/books`) loads the library from `/api/books` and supports searching,
+adding, and editing books. The dashboard uses the same database-backed book store.
+Title and author are required; total pages is optional.
+
+The `seed_classroom_books` data migration adds the three former demo books and
+their authors without replacing existing records. Apply it with `npm run db:migrate`
+using your intended development database. Review pending migrations first: the older
+UUID migration deliberately drops and recreates the development tables.
+Books previously saved in browser local storage are no longer read or written;
+custom browser-only books must be re-entered through the Books page.
+
 ## Recommended IDE Setup
 
 [VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).

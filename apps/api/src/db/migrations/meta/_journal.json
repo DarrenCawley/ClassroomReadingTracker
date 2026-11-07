@@ -29,6 +29,13 @@
       "when": 1792707704226,
       "tag": "20261022222144_update_id_pks_to_uuid",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794065320442,
+      "tag": "20261107152840_seed_classroom_books",
+      "breakpoints": true
     }
   ]
 }

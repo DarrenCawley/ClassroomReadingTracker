@@ -1,38 +1,17 @@
 import type { TrackerData } from './types'
 
+type LocalData = Omit<TrackerData, 'books'>
+
 export interface TrackerRepository {
-  load(): TrackerData
-  save(data: TrackerData): void
+  load(): LocalData
+  save(data: LocalData): void
 }
-export const emptyData = (): TrackerData => ({ students: [], books: [], assignments: [] })
-const demo: TrackerData = {
+export const emptyData = (): LocalData => ({ students: [], assignments: [] })
+const demo: LocalData = {
   students: [
     { id: 's1', name: 'Ava Thompson', year: 7, createdAt: '2026-08-01' },
     { id: 's2', name: 'Marcus Lee', year: 8, createdAt: '2026-08-01' },
     { id: 's3', name: 'Sofia Rivera', year: 2, createdAt: '2026-08-01' },
-  ],
-  books: [
-    {
-      id: 'b1',
-      title: 'Charlotte’s Web',
-      author: 'E. B. White',
-      totalPages: 192,
-      createdAt: '2026-08-01',
-    },
-    {
-      id: 'b2',
-      title: 'The Wild Robot',
-      author: 'Peter Brown',
-      totalPages: 288,
-      createdAt: '2026-08-01',
-    },
-    {
-      id: 'b3',
-      title: 'Because of Winn-Dixie',
-      author: 'Kate DiCamillo',
-      totalPages: 288,
-      createdAt: '2026-08-01',
-    },
   ],
   assignments: [
     {
@@ -62,17 +41,22 @@ const demo: TrackerData = {
   ],
 }
 const KEY = 'book-tracker-data-v1'
-const copyDemo = (): TrackerData => JSON.parse(JSON.stringify(demo))
+const copyDemo = (): LocalData => JSON.parse(JSON.stringify(demo))
 export const localRepository: TrackerRepository = {
   load() {
     try {
       const raw = localStorage.getItem(KEY)
-      return raw ? JSON.parse(raw) : copyDemo()
+      if (!raw) return copyDemo()
+      const stored = JSON.parse(raw) as LocalData
+      return { students: stored.students, assignments: stored.assignments }
     } catch {
       return copyDemo()
     }
   },
   save(data) {
-    localStorage.setItem(KEY, JSON.stringify(data))
+    localStorage.setItem(
+      KEY,
+      JSON.stringify({ students: data.students, assignments: data.assignments }),
+    )
   },
 }
