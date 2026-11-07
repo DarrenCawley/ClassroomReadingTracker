@@ -315,6 +315,15 @@ select:focus {
 @media (max-width: 760px) {
   header {
     padding: 0 16px;
+    height: auto;
+    min-height: 72px;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+  nav {
+    flex-wrap: wrap;
   }
   main {
     padding: 30px 16px;

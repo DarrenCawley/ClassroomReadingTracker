@@ -36,6 +36,20 @@
       "when": 1794065320442,
       "tag": "20261107152840_seed_classroom_books",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794068763803,
+      "tag": "20261107162603_assignment_integrity",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794068802537,
+      "tag": "20261107162642_seed_reading_assignments",
+      "breakpoints": true
     }
   ]
 }

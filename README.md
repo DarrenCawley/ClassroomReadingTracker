@@ -36,6 +36,26 @@ UUID migration deliberately drops and recreates the development tables.
 Books previously saved in browser local storage are no longer read or written;
 custom browser-only books must be re-entered through the Books page.
 
+## Reading assignments
+
+The Assignments page (`/assignments`) manages classroom reading. Select a student
+and book to create an assignment, update its current page and status, or remove it
+after confirmation. Click a student's name in the roster or dashboard to open their
+reading page (`/students/:studentId`). The dashboard counts and progress now load
+from the database; the old local-storage repository has been removed.
+
+The API provides `GET`/`POST /api/assignments` and `PATCH`/`DELETE /api/assignments/:id`.
+It validates IDs, statuses and page bounds, and permits one assignment per student
+and book. Removing an assignment keeps the student and book.
+
+Apply the new migrations with `npm run db:migrate` against the intended development
+database before deploying the API. `assignment_integrity` adds a unique student/book
+constraint and a non-negative page constraint; existing duplicate or negative-page
+records must be resolved before it can apply. `seed_reading_assignments` adds the
+three former demo students and their assignments using database UUIDs, leaving
+existing assignments and progress intact. Browser-only assignments are not imported.
+Redeploy both the Render API and Vercel frontend to enable the new routes and views.
+
 ## Recommended IDE Setup
 
 [VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).

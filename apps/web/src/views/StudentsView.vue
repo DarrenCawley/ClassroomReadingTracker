@@ -7,8 +7,13 @@
     </div>
     <button class="button" :disabled="showForm" @click="openEditStudentForm()">Add students</button>
   </section>
-  <EditStudent v-if="showForm" :key="selectedStudent?.id ?? 'new'" :student="selectedStudent" @saved="showForm = false"
-    @cancel="showForm = false" />
+  <EditStudent
+    v-if="showForm"
+    :key="selectedStudent?.id ?? 'new'"
+    :student="selectedStudent"
+    @saved="showForm = false"
+    @cancel="showForm = false"
+  />
   <section class="panel">
     <div class="table-top">
       <div>
@@ -37,11 +42,21 @@
         </thead>
         <tbody>
           <tr v-for="student in students" :key="student.id">
-            <td>{{ student.name }}</td>
+            <td>
+              <RouterLink :to="`/students/${student.id}`">{{ student.name }}</RouterLink>
+            </td>
             <td>{{ student.year }}</td>
             <td>{{ new Date(student.createdAt).toLocaleDateString() }}</td>
-            <td><button type="button" :disabled="showForm" :aria-label="`Edit ${student.name}`"
-                @click="openEditStudentForm(student)">Edit</button></td>
+            <td>
+              <button
+                type="button"
+                :disabled="showForm"
+                :aria-label="`Edit ${student.name}`"
+                @click="openEditStudentForm(student)"
+              >
+                Edit
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -51,6 +66,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useStudentsStore } from '../stores/students'
 import EditStudent from '../components/students/EditStudent.vue'

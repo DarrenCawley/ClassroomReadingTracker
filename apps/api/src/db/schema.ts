@@ -1,4 +1,5 @@
-import { pgEnum, pgTable, integer, uuid, text, timestamp } from 'drizzle-orm/pg-core'
+import { pgEnum, pgTable, integer, uuid, text, timestamp, unique, check } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
 
 export const authors = pgTable('authors', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -24,18 +25,25 @@ export const students = pgTable('students', {
 
 export const readingStatus = pgEnum('reading_status', ['not_started', 'reading', 'finished'])
 
-export const readingAssignments = pgTable('reading_assignments', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  studentId: uuid('student_id')
-    .notNull()
-    .references(() => students.id),
-  bookId: uuid('book_id')
-    .notNull()
-    .references(() => books.id),
-  currentPage: integer('current_page').notNull().default(0),
-  status: readingStatus('status').notNull().default('not_started'),
-  updatedAt: timestamp('updated_at')
-    .notNull()
-    .defaultNow()
-    .$onUpdate(() => new Date()),
-})
+export const readingAssignments = pgTable(
+  'reading_assignments',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    studentId: uuid('student_id')
+      .notNull()
+      .references(() => students.id),
+    bookId: uuid('book_id')
+      .notNull()
+      .references(() => books.id),
+    currentPage: integer('current_page').notNull().default(0),
+    status: readingStatus('status').notNull().default('not_started'),
+    updatedAt: timestamp('updated_at')
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    unique('reading_assignments_student_book_unique').on(table.studentId, table.bookId),
+    check('reading_assignments_current_page_nonnegative', sql`${table.currentPage} >= 0`),
+  ],
+)

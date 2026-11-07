@@ -20,8 +20,3 @@ export interface ReadingAssignment {
   status: Status
   updatedAt: string
 }
-export interface TrackerData {
-  students: Student[]
-  books: Book[]
-  assignments: ReadingAssignment[]
-}

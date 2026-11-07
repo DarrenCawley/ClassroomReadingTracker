@@ -5,6 +5,7 @@
       <RouterLink to="/">Dashboard</RouterLink>
       <RouterLink to="/students">Students</RouterLink>
       <RouterLink to="/books">Books</RouterLink>
+      <RouterLink to="/assignments">Assignments</RouterLink>
     </nav>
   </header>
   <main>

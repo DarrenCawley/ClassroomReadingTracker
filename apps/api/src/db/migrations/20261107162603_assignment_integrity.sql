@@ -1,0 +1,2 @@
+ALTER TABLE "reading_assignments" ADD CONSTRAINT "reading_assignments_student_book_unique" UNIQUE("student_id","book_id");--> statement-breakpoint
+ALTER TABLE "reading_assignments" ADD CONSTRAINT "reading_assignments_current_page_nonnegative" CHECK ("reading_assignments"."current_page" >= 0);
