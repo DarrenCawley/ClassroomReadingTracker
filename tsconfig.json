@@ -5,10 +5,13 @@
       "path": "./tsconfig.node.json"
     },
     {
-      "path": "./tsconfig.app.json"
+      "path": "./apps/web/tsconfig.json"
     },
     {
-      "path": "./tsconfig.vitest.json"
+      "path": "./apps/web/tsconfig.vitest.json"
+    },
+    {
+      "path": "./apps/api/tsconfig.json"
     }
   ]
 }

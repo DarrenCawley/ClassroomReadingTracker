@@ -23,7 +23,7 @@ export default defineConfigWithVueTs(
 
   {
     ...pluginVitest.configs.recommended,
-    files: ['src/**/__tests__/*'],
+    files: ['apps/web/src/**/__tests__/**/*'],
   },
 
   ...pluginOxlint.buildFromOxlintConfigFile('.oxlintrc.json'),
