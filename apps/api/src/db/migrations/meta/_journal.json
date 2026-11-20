@@ -50,6 +50,27 @@
       "when": 1794068802537,
       "tag": "20261107162642_seed_reading_assignments",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795131734044,
+      "tag": "20261119234214_add_users",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795132742558,
+      "tag": "20261119235902_add_teacher_ownership",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795134137082,
+      "tag": "20261120002217_require_teacher_ownership",
+      "breakpoints": true
     }
   ]
 }

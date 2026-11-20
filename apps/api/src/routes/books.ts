@@ -2,8 +2,10 @@ import { Router } from 'express'
 import { eq, sql } from 'drizzle-orm'
 import { db } from '../db/index'
 import { authors, books } from '../db/schema'
+import { requireTeacher } from '../auth/teacher'
 
 export const booksRouter = Router()
+booksRouter.use(requireTeacher)
 
 // Keep the author lookup/creation and book write in a single atomic statement.
 booksRouter.post('/', saveBook)
@@ -35,10 +37,13 @@ async function saveBook(req: import('express').Request, res: import('express').R
     return
   }
   try {
-    const target = id ? sql`SELECT id FROM books WHERE id = ${id}::uuid` : sql`SELECT 1`
+    const ownerUserId = res.locals.ownerUserId as string
+    const target = id
+      ? sql`SELECT id FROM books WHERE id = ${id}::uuid AND owner_user_id = ${ownerUserId}::uuid`
+      : sql`SELECT 1`
     const write = id
-      ? sql`UPDATE books SET title = ${title.trim()}, author_id = (SELECT id FROM chosen_author), total_pages = ${totalPages ?? null} WHERE id = ${id}::uuid RETURNING *`
-      : sql`INSERT INTO books (title, author_id, total_pages) VALUES (${title.trim()}, (SELECT id FROM chosen_author), ${totalPages ?? null}) RETURNING *`
+      ? sql`UPDATE books SET title = ${title.trim()}, author_id = (SELECT id FROM chosen_author), total_pages = ${totalPages ?? null} WHERE id = ${id}::uuid AND owner_user_id = ${ownerUserId}::uuid RETURNING *`
+      : sql`INSERT INTO books (title, author_id, total_pages, owner_user_id) VALUES (${title.trim()}, (SELECT id FROM chosen_author), ${totalPages ?? null}, ${ownerUserId}::uuid) RETURNING *`
     const result = await db.execute(sql`
       WITH target AS (${target}),
       existing_author AS (SELECT id FROM authors WHERE name = ${author.trim()} LIMIT 1),
@@ -62,7 +67,7 @@ async function saveBook(req: import('express').Request, res: import('express').R
   }
 }
 
-booksRouter.get('/', async (req, res) => {
+export async function listBooks(ownerUserId: string) {
   const results = await db
     .select({
       id: books.id,
@@ -73,13 +78,16 @@ booksRouter.get('/', async (req, res) => {
     })
     .from(books)
     .leftJoin(authors, eq(books.authorId, authors.id))
+    .where(eq(books.ownerUserId, ownerUserId))
     .orderBy(books.title)
 
-  res.json(
-    results.map((book) => ({
-      ...book,
-      author: book.author ?? 'Unknown author',
-      totalPages: book.totalPages ?? undefined,
-    })),
-  )
+  return results.map((book) => ({
+    ...book,
+    author: book.author ?? 'Unknown author',
+    totalPages: book.totalPages ?? undefined,
+  }))
+}
+
+booksRouter.get('/', async (_req, res) => {
+  res.json(await listBooks(res.locals.ownerUserId))
 })

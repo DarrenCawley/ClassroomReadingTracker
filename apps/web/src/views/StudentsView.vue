@@ -5,10 +5,12 @@
       <h1>Students</h1>
       <p>Add students and manage your classroom roster.</p>
     </div>
-    <button class="button" :disabled="showForm" @click="openEditStudentForm()">Add students</button>
+    <button v-if="!isDemo" class="button" :disabled="showForm" @click="openEditStudentForm()">
+      Add students
+    </button>
   </section>
   <EditStudent
-    v-if="showForm"
+    v-if="showForm && !isDemo"
     :key="selectedStudent?.id ?? 'new'"
     :student="selectedStudent"
     @saved="showForm = false"
@@ -37,7 +39,7 @@
             <th>Name</th>
             <th>Year</th>
             <th>Added</th>
-            <th>Actions</th>
+            <th v-if="!isDemo">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -47,7 +49,7 @@
             </td>
             <td>{{ student.year }}</td>
             <td>{{ new Date(student.createdAt).toLocaleDateString() }}</td>
-            <td>
+            <td v-if="!isDemo">
               <button
                 type="button"
                 :disabled="showForm"
@@ -71,6 +73,7 @@ import { storeToRefs } from 'pinia'
 import { useStudentsStore } from '../stores/students'
 import EditStudent from '../components/students/EditStudent.vue'
 import type { Student } from '../types'
+import { isDemo } from '../auth/session'
 
 const studentsStore = useStudentsStore()
 const { students, loading, error } = storeToRefs(studentsStore)

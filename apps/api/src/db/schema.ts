@@ -1,5 +1,16 @@
-import { pgEnum, pgTable, integer, uuid, text, timestamp, unique, check } from 'drizzle-orm/pg-core'
+import { pgEnum, pgTable, integer, uuid, text, timestamp, unique, check, index } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
+
+export const users = pgTable(
+  'users',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    authProvider: text('auth_provider').notNull(),
+    authSubjectId: text('auth_subject_id').notNull(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => [unique('users_auth_identity_unique').on(table.authProvider, table.authSubjectId)],
+)
 
 export const authors = pgTable('authors', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -10,18 +21,20 @@ export const authors = pgTable('authors', {
 
 export const books = pgTable('books', {
   id: uuid('id').defaultRandom().primaryKey(),
+  ownerUserId: uuid('owner_user_id').notNull().references(() => users.id),
   title: text('title').notNull(),
   totalPages: integer('total_pages'),
   authorId: uuid('author_id').references(() => authors.id),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-})
+}, (table) => [index('books_owner_user_id_idx').on(table.ownerUserId)])
 
 export const students = pgTable('students', {
   id: uuid('id').defaultRandom().primaryKey(),
+  ownerUserId: uuid('owner_user_id').notNull().references(() => users.id),
   name: text('name').notNull(),
   year: integer('year'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-})
+}, (table) => [index('students_owner_user_id_idx').on(table.ownerUserId)])
 
 export const readingStatus = pgEnum('reading_status', ['not_started', 'reading', 'finished'])
 

@@ -1,4 +1,5 @@
 import { computed, reactive, ref } from 'vue'
+import { assertCurrentSession, requestContext, sessionRevision } from './auth/session'
 
 const BASE_URL = '/api'
 // Track each data request separately, but share server health across all of them.
@@ -51,7 +52,11 @@ function resetServerHealth() {
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const revision = sessionRevision()
+  const context = await requestContext(path, options.method ?? 'GET')
+  assertCurrentSession(revision)
   const headers = new Headers(options.headers)
+  if (context.token) headers.set('Authorization', `Bearer ${context.token}`)
 
   if (options.body !== undefined) {
     headers.set('Content-Type', 'application/json')
@@ -68,11 +73,12 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const timeout = setTimeout(() => controller.abort(), 90_000)
 
   try {
-    const response = await fetch(`${BASE_URL}${path}`, {
+    const response = await fetch(`${BASE_URL}${context.path}`, {
       ...options,
       headers,
       signal: controller.signal,
     })
+    assertCurrentSession(revision)
 
     if (!response.ok) {
       const body = await response.json().catch(() => null)
@@ -85,7 +91,9 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       return undefined as T
     }
 
-    return (await response.json()) as T
+    const result = (await response.json()) as T
+    assertCurrentSession(revision)
+    return result
   } catch (error) {
     if (controller.signal.aborted) {
       throw new Error(

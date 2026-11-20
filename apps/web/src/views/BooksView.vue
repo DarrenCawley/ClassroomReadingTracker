@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 import { useBooksStore } from '../stores/books'
 import EditBook from '../components/books/EditBook.vue'
 import type { Book } from '../types'
+import { isDemo } from '../auth/session'
 
 const store = useBooksStore()
 const { books, loading, error } = storeToRefs(store)
@@ -29,10 +30,12 @@ onMounted(() => store.loadBooks())
       <h1>Books</h1>
       <p>Build and manage your classroom library.</p>
     </div>
-    <button class="button" :disabled="showForm || loading" @click="edit()">Add book</button>
+    <button v-if="!isDemo" class="button" :disabled="showForm || loading" @click="edit()">
+      Add book
+    </button>
   </section>
   <EditBook
-    v-if="showForm"
+    v-if="showForm && !isDemo"
     :key="selected?.id ?? 'new'"
     :book="selected"
     @saved="showForm = false"
@@ -68,7 +71,7 @@ onMounted(() => store.loadBooks())
             <th>Author</th>
             <th>Pages</th>
             <th>Added</th>
-            <th>Actions</th>
+            <th v-if="!isDemo">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -77,7 +80,7 @@ onMounted(() => store.loadBooks())
             <td>{{ book.author }}</td>
             <td>{{ book.totalPages ?? 'Unknown' }}</td>
             <td>{{ new Date(book.createdAt).toLocaleDateString() }}</td>
-            <td>
+            <td v-if="!isDemo">
               <button :disabled="showForm" :aria-label="`Edit ${book.title}`" @click="edit(book)">
                 Edit
               </button>

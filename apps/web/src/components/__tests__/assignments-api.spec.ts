@@ -23,18 +23,26 @@ async function call(method: string, path: string, body: unknown = {}, params = {
       layer.route.stack.some((entry: { method?: string }) => entry.method === method),
   )!
   const handler = layer.route!.stack[0]!.handle
-  const res = { status: vi.fn().mockReturnThis(), json: vi.fn().mockReturnThis(), end: vi.fn() }
+  const res = {
+    locals: { ownerUserId: '00000000-0000-4000-8000-000000000004' },
+    status: vi.fn().mockReturnThis(),
+    json: vi.fn().mockReturnThis(),
+    end: vi.fn(),
+  }
   await handler({ body, params } as Request, res as unknown as Response, vi.fn())
   return res
 }
 
 function selectResult(rows: unknown[]) {
   const query = {
-    where: vi.fn().mockResolvedValue(rows),
+    where: vi.fn(),
     orderBy: vi.fn().mockResolvedValue(rows),
     innerJoin: vi.fn(),
   }
   query.innerJoin.mockReturnValue(query)
+  query.where.mockReturnValue(
+    Object.assign(Promise.resolve(rows), { orderBy: vi.fn().mockResolvedValue(rows) }),
+  )
   db.select.mockReturnValueOnce({ from: vi.fn().mockReturnValue(query) })
 }
 
@@ -85,13 +93,11 @@ describe('Reading assignment API', () => {
   })
 
   it('creates assignments with defaults and reports duplicates', async () => {
-    const values = vi
-      .fn()
-      .mockReturnValue({
-        onConflictDoNothing: vi
-          .fn()
-          .mockReturnValue({ returning: vi.fn().mockResolvedValue([assignment]) }),
-      })
+    const values = vi.fn().mockReturnValue({
+      onConflictDoNothing: vi
+        .fn()
+        .mockReturnValue({ returning: vi.fn().mockResolvedValue([assignment]) }),
+    })
     db.insert.mockReturnValue({ values })
     selectResult([{ id: studentId }])
     selectResult([{ totalPages: 120 }])
@@ -106,13 +112,9 @@ describe('Reading assignment API', () => {
     expect(res.json).toHaveBeenCalledWith(assignment)
 
     db.insert.mockReturnValue({
-      values: vi
-        .fn()
-        .mockReturnValue({
-          onConflictDoNothing: vi
-            .fn()
-            .mockReturnValue({ returning: vi.fn().mockResolvedValue([]) }),
-        }),
+      values: vi.fn().mockReturnValue({
+        onConflictDoNothing: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([]) }),
+      }),
     })
     selectResult([{ id: studentId }])
     selectResult([{ totalPages: null }])
@@ -122,11 +124,9 @@ describe('Reading assignment API', () => {
 
   it('updates progress and deletes an assignment', async () => {
     selectResult([{ totalPages: 120 }])
-    const set = vi
-      .fn()
-      .mockReturnValue({
-        where: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([assignment]) }),
-      })
+    const set = vi.fn().mockReturnValue({
+      where: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([assignment]) }),
+    })
     db.update.mockReturnValue({ set })
     const updated = await call('patch', '/:id', { currentPage: 12, status: 'reading' }, { id })
     expect(set).toHaveBeenCalledWith({ currentPage: 12, status: 'reading' })

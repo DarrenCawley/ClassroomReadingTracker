@@ -2,8 +2,10 @@ import { Router } from 'express'
 import { and, eq, sql } from 'drizzle-orm'
 import { db } from '../db/index'
 import { books, students, readingAssignments } from '../db/schema'
+import { requireTeacher } from '../auth/teacher'
 
 export const assignmentsRouter = Router()
+assignmentsRouter.use(requireTeacher)
 const uuid = (value: unknown): value is string =>
   typeof value === 'string' &&
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
@@ -18,32 +20,41 @@ export function validProgress(page: unknown, status: unknown) {
   )
 }
 
-assignmentsRouter.get('/', async (_req, res) => {
-  const results = await db
+function ownedAssignment(ownerUserId: string) {
+  return and(
+    sql`EXISTS (SELECT 1 FROM students WHERE students.id = ${readingAssignments.studentId} AND students.owner_user_id = ${ownerUserId}::uuid)`,
+    sql`EXISTS (SELECT 1 FROM books WHERE books.id = ${readingAssignments.bookId} AND books.owner_user_id = ${ownerUserId}::uuid)`,
+  )
+}
+
+export async function listAssignments(ownerUserId: string) {
+  return db
     .select()
     .from(readingAssignments)
+    .where(ownedAssignment(ownerUserId))
     .orderBy(readingAssignments.updatedAt, readingAssignments.id)
-  res.json(results)
+}
+
+assignmentsRouter.get('/', async (_req, res) => {
+  res.json(await listAssignments(res.locals.ownerUserId))
 })
 
 assignmentsRouter.post('/', async (req, res) => {
   const { studentId, bookId, currentPage = 0, status = 'not_started' } = req.body ?? {}
   if (!uuid(studentId) || !uuid(bookId) || !validProgress(currentPage, status)) {
-    res
-      .status(400)
-      .json({
-        error: 'Choose a student and book, a valid status, and a non-negative whole page number.',
-      })
+    res.status(400).json({
+      error: 'Choose a student and book, a valid status, and a non-negative whole page number.',
+    })
     return
   }
   const [student] = await db
     .select({ id: students.id })
     .from(students)
-    .where(eq(students.id, studentId))
+    .where(and(eq(students.id, studentId), eq(students.ownerUserId, res.locals.ownerUserId)))
   const [book] = await db
     .select({ totalPages: books.totalPages })
     .from(books)
-    .where(eq(books.id, bookId))
+    .where(and(eq(books.id, bookId), eq(books.ownerUserId, res.locals.ownerUserId)))
   if (!student || !book) {
     res.status(404).json({ error: 'Student or book not found.' })
     return
@@ -77,7 +88,7 @@ assignmentsRouter.patch('/:id', async (req, res) => {
     .select({ totalPages: books.totalPages })
     .from(readingAssignments)
     .innerJoin(books, eq(readingAssignments.bookId, books.id))
-    .where(eq(readingAssignments.id, id))
+    .where(and(eq(readingAssignments.id, id), ownedAssignment(res.locals.ownerUserId)))
   if (!existing) {
     res.status(404).json({ error: 'Reading assignment not found.' })
     return
@@ -92,6 +103,7 @@ assignmentsRouter.patch('/:id', async (req, res) => {
     .where(
       and(
         eq(readingAssignments.id, id),
+        ownedAssignment(res.locals.ownerUserId),
         sql`${currentPage} <= COALESCE((SELECT total_pages FROM books WHERE id = ${readingAssignments.bookId}), 2147483647)`,
       ),
     )
@@ -111,7 +123,7 @@ assignmentsRouter.delete('/:id', async (req, res) => {
   }
   const [assignment] = await db
     .delete(readingAssignments)
-    .where(eq(readingAssignments.id, id))
+    .where(and(eq(readingAssignments.id, id), ownedAssignment(res.locals.ownerUserId)))
     .returning({ id: readingAssignments.id })
   if (!assignment) {
     res.status(404).json({ error: 'Reading assignment not found.' })

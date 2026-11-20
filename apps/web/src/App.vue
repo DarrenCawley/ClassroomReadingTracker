@@ -7,8 +7,16 @@
       <RouterLink to="/books">Books</RouterLink>
       <RouterLink to="/assignments">Assignments</RouterLink>
     </nav>
+    <AccountControls />
   </header>
   <main>
+    <section v-if="isDemo" class="demo-notice" role="status">
+      <strong>Read-only demo</strong>
+      <p>
+        Explore the sample classroom. Sign in or create an account to start your own private
+        tracker.
+      </p>
+    </section>
     <section v-if="apiSlow" class="connection-notice" role="status" aria-live="polite">
       <span class="connection-spinner" aria-hidden="true"></span>
       <div>
@@ -21,16 +29,41 @@
         <p v-else>The server is taking longer than usual to return your data. Please wait.</p>
       </div>
     </section>
-    <RouterView />
+    <RouterView v-if="authReady" :key="sessionKey" />
+    <p v-else role="status">Loading your account…</p>
   </main>
 </template>
 
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
 import { apiSlow, apiWaking } from './api'
+import AccountControls from './components/auth/AccountControls.vue'
+import { useClerkSession } from './auth/clerk'
+import { authReady, isDemo, sessionKey } from './auth/session'
+
+useClerkSession()
 </script>
 
 <style scoped>
+.demo-notice {
+  padding: 16px;
+  margin-bottom: 24px;
+  border: 1px solid #c4d8cb;
+  border-radius: 12px;
+  background: #e8f1eb;
+}
+.demo-notice p {
+  margin: 6px 0 0;
+}
+header {
+  height: auto;
+  min-height: 72px;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
 .connection-notice {
   display: flex;
   align-items: flex-start;

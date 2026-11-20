@@ -1,9 +1,11 @@
 import { Router } from 'express'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { db } from '../db/index'
 import { students } from '../db/schema'
+import { requireTeacher } from '../auth/teacher'
 
 export const studentsRouter = Router()
+studentsRouter.use(requireTeacher)
 
 studentsRouter.patch('/:id', async (req, res) => {
   const { id } = req.params
@@ -21,9 +23,11 @@ studentsRouter.patch('/:id', async (req, res) => {
     return
   }
   try {
-    const [student] = await db.update(students)
+    const [student] = await db
+      .update(students)
       .set({ name: name.trim(), year })
-      .where(eq(students.id, id)).returning()
+      .where(and(eq(students.id, id), eq(students.ownerUserId, res.locals.ownerUserId)))
+      .returning()
     if (!student) {
       res.status(404).json({ error: 'Student not found.' })
       return
@@ -45,15 +49,28 @@ studentsRouter.post('/', async (req, res) => {
     return
   }
   try {
-    const [student] = await db.insert(students).values({ name: name.trim(), year }).returning()
+    const [student] = await db
+      .insert(students)
+      .values({
+        name: name.trim(),
+        year,
+        ownerUserId: res.locals.ownerUserId,
+      })
+      .returning()
     res.status(201).json(student)
   } catch {
     res.status(500).json({ error: 'Could not save the student. Please try again.' })
   }
 })
 
-studentsRouter.get('/', async (req, res) => {
-  const results = await db.select().from(students).orderBy(students.name)
+export async function listStudents(ownerUserId: string) {
+  return db
+    .select()
+    .from(students)
+    .where(eq(students.ownerUserId, ownerUserId))
+    .orderBy(students.name)
+}
 
-  res.json(results)
+studentsRouter.get('/', async (_req, res) => {
+  res.json(await listStudents(res.locals.ownerUserId))
 })

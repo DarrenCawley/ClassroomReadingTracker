@@ -8,6 +8,7 @@ import { useBooksStore } from '../stores/books'
 import EditAssignment from '../components/assignments/EditAssignment.vue'
 import { percent } from '../progress'
 import type { ReadingAssignment } from '../types'
+import { isDemo } from '../auth/session'
 
 const route = useRoute()
 const store = useAssignmentsStore()
@@ -85,6 +86,7 @@ onMounted(load)
       <p>Assign books and keep reading progress up to date.</p>
     </div>
     <button
+      v-if="!isDemo"
       class="button"
       :disabled="
         showForm ||
@@ -107,7 +109,7 @@ onMounted(load)
   <section v-else-if="studentId && !student" class="panel empty">Student not found.</section>
   <template v-else>
     <EditAssignment
-      v-if="showForm"
+      v-if="showForm && !isDemo"
       :key="selected?.id ?? 'new'"
       :assignment="selected"
       :student-id="studentId"
@@ -152,7 +154,7 @@ onMounted(load)
               <th>Progress</th>
               <th>Status</th>
               <th>Updated</th>
-              <th>Actions</th>
+              <th v-if="!isDemo">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -179,7 +181,7 @@ onMounted(load)
                 }}</span>
               </td>
               <td>{{ new Date(row.a.updatedAt).toLocaleDateString() }}</td>
-              <td>
+              <td v-if="!isDemo">
                 <div v-if="confirming === row.a.id" class="actions">
                   <span>Remove assignment?</span
                   ><button :disabled="!!removing" @click="remove(row.a.id)">

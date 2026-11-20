@@ -5,7 +5,9 @@
       <h1>Dashboard</h1>
       <p>Keep a clear view of every reader’s journey.</p>
     </div>
-    <RouterLink class="button" to="/students">Manage students</RouterLink>
+    <RouterLink class="button" to="/students">{{
+      isDemo ? 'View students' : 'Manage students'
+    }}</RouterLink>
   </section>
   <div v-if="error" role="alert" class="panel">
     <p>{{ error }}</p>
@@ -52,7 +54,9 @@
       <div>
         <h2>Reading progress</h2>
         <p>Assigned books across your classroom.</p>
-        <RouterLink to="/assignments">Manage assignments</RouterLink>
+        <RouterLink to="/assignments">{{
+          isDemo ? 'View assignments' : 'Manage assignments'
+        }}</RouterLink>
       </div>
       <input
         v-model="filter"
@@ -107,6 +111,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { isDemo } from '../auth/session'
 import { RouterLink, useRouter } from 'vue-router'
 import { percent } from '../progress'
 import { useAssignmentsStore } from '../stores/assignments'
